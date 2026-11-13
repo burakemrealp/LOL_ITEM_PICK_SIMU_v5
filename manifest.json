@@ -1,0 +1,30 @@
+{
+  "name": "LOL ITEMS – League of Legends Eşya & Senaryo Simülatörü",
+  "short_name": "LOL ITEMS",
+  "description": "209 Eşya Veritabanı, Gerçek Zamanlı Altın Ekonomisi ve 5 Evreli Maç Simülatörü (Android / iOS / Masaüstü)",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#050a14",
+  "theme_color": "#050a14",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "./icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "./apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}
