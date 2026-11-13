@@ -44,12 +44,12 @@ Bunun yerine seni gerçek bir maçın en kritik anına — **Ejderha Ruhu önces
 
 ## Öne Çıkan Özellikler
 
-* **🎲 Sonsuz Prosedürel Maç Motoru:** 173 şampiyon, 5 koridor, 8 farklı kabiliyet (rün) kurgusu ve 209 eşyanın dinamik kombinasyonuyla asla kendini tekrar etmeyen, her seferinde yeni bir bulmaca sunan maç senaryoları.
-* **📊 Canlı TAB Skor Tablosu Analizi:** Rakip takımın AD / AP / Off-Tank / Tank dağılımı, kasmış tehditlerin (Bounty) çantalarındaki gerçek eşyalar ve her şampiyonun portresine dokunduğunda açılan taktiksel tehdit karnesi.
-* **🛒 Çoklu Stat Filtreli 209 Eşya Dükkanı:** Oyundaki tüm eşyaları aynı anda birden fazla niteliğe göre *(Örn: "Saldırı Gücü + Zırh Delme + Ağır Yara")* filtreleyebileceğin interaktif Hextech dükkanı.
-* **🏆 Lig & LP İlerleme Sistemi:** Bronz IV'ten Şampiyonluk (Challenger) aşamasına kadar, çözdüğün senaryoların zorluk derecesine göre LP kazanıp lig atladığın (veya yanlış kararlarla LP kaybettiğin) rekabetçi profil sistemi.
-* **👥 Çoklu Hesap (Profil) Desteği:** Tıpkı dijital yayın platformlarındaki gibi 5 farklı sihirdar profili oluşturabilme ve her profilin ligini/istatistiğini ayrı ayrı takip edebilme imkânı.
-* **📱 Tam Ekran Mobil Uygulama (PWA) & Çevrimdışı Çalışma:** İster bilgisayarda, ister Android veya iPhone (iOS) ana ekranına kurarak internetin olmasa bile metroda, otobüste veya maç sırası beklerken antrenman yapabilme özgürlüğü.
+* **Sonsuz Prosedürel Maç Motoru:** 173 şampiyon, 5 koridor, 8 farklı kabiliyet (rün) kurgusu ve 209 eşyanın dinamik kombinasyonuyla asla kendini tekrar etmeyen, her seferinde yeni bir bulmaca sunan maç senaryoları.
+* **Canlı TAB Skor Tablosu Analizi:** Rakip takımın AD / AP / Off-Tank / Tank dağılımı, kasmış tehditlerin (Bounty) çantalarındaki gerçek eşyalar ve her şampiyonun portresine dokunduğunda açılan taktiksel tehdit karnesi.
+* **Çoklu Stat Filtreli 209 Eşya Dükkanı:** Oyundaki tüm eşyaları aynı anda birden fazla niteliğe göre *(Örn: "Saldırı Gücü + Zırh Delme + Ağır Yara")* filtreleyebileceğin interaktif Hextech dükkanı.
+* **Lig & LP İlerleme Sistemi:** Bronz IV'ten Şampiyonluk (Challenger) aşamasına kadar, çözdüğün senaryoların zorluk derecesine göre LP kazanıp lig atladığın (veya yanlış kararlarla LP kaybettiğin) rekabetçi profil sistemi.
+* **Çoklu Hesap (Profil) Desteği:** Tıpkı dijital yayın platformlarındaki gibi 5 farklı sihirdar profili oluşturabilme ve her profilin ligini/istatistiğini ayrı ayrı takip edebilme imkânı.
+* **Tam Ekran Mobil Uygulama (PWA) & Çevrimdışı Çalışma:** İster bilgisayarda, ister Android veya iPhone (iOS) ana ekranına kurarak internetin olmasa bile metroda, otobüste veya maç sırası beklerken antrenman yapabilme özgürlüğü.
 
 ---
 
