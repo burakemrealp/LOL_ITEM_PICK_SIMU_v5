@@ -13,7 +13,7 @@
 
 ---
 
-## 🧠 Bir Manifesto: Neden Bu Projeyi Yaptık?
+## Bir Manifesto: Neden Bu Projeyi Yaptık?
 
 League of Legends'ta milyonlarca oyuncunun yıllardır içine düştüğü görünmez bir tuzak var: **Otomatik Pilot Sendromu.**
 
@@ -30,7 +30,7 @@ Oysa Sihirdar Vadisi'nde **her maç yaşayan, nefes alan ve bir öncekinden tama
 
 ---
 
-## 🎯 Misyonumuz: Sana Balık Vermiyoruz, Dükkânı Okumayı Öğretiyoruz
+## Misyonumuz: Sana Balık Vermiyoruz, Dükkânı Okumayı Öğretiyoruz
 
 Bu uygulama bir "hazır build rehberi" **değildir**. Burada hiçbir şampiyona sabit bir eşya listesi biçilmez. 
 
@@ -42,7 +42,7 @@ Bunun yerine seni gerçek bir maçın en kritik anına — **Ejderha Ruhu önces
 
 ---
 
-## ✨ Öne Çıkan Özellikler
+## Öne Çıkan Özellikler
 
 * **🎲 Sonsuz Prosedürel Maç Motoru:** 173 şampiyon, 5 koridor, 8 farklı kabiliyet (rün) kurgusu ve 209 eşyanın dinamik kombinasyonuyla asla kendini tekrar etmeyen, her seferinde yeni bir bulmaca sunan maç senaryoları.
 * **📊 Canlı TAB Skor Tablosu Analizi:** Rakip takımın AD / AP / Off-Tank / Tank dağılımı, kasmış tehditlerin (Bounty) çantalarındaki gerçek eşyalar ve her şampiyonun portresine dokunduğunda açılan taktiksel tehdit karnesi.
@@ -53,21 +53,21 @@ Bunun yerine seni gerçek bir maçın en kritik anına — **Ejderha Ruhu önces
 
 ---
 
-## 📲 Kurulum (Web, Android, iOS ve Masaüstü)
+## Kurulum (Web, Android, iOS ve Masaüstü)
 
-### 🌐 1. Tarayıcıdan Anında Başla
+### 1. Tarayıcıdan Anında Başla
 Hiçbir indirme yapmadan GitHub Pages bağlantısı üzerinden doğrudan açıp kullanabilirsin.
 
-### 📱 2. Telefona Uygulama Olarak Kur (Android & iOS)
+### 2. Telefona Uygulama Olarak Kur (Android & iOS)
 * **Android (Chrome):** Siteyi aç $\rightarrow$ Sağ üstteki **⋮ (Üç Nokta)** menüsüne dokun $\rightarrow$ **"Uygulamayı yükle"** veya **"Ana ekrana ekle"** seçeneğine bas.
 * **iPhone / iPad (Safari):** Siteyi Safari'de aç $\rightarrow$ Alt bardaki **Paylaş `[↑]`** simgesine dokun $\rightarrow$ **"Ana Ekrana Ekle"** seçeneğine bas.
 
-### 💻 3. Bilgisayarda Çevrimdışı (Offline) Çalıştır
+### 3. Bilgisayarda Çevrimdışı (Offline) Çalıştır
 Repoyu indirdikten sonra klasör içindeki **`Baslat_Offline_Uygulama.bat`** dosyasına çift tıklayarak veya **`index.html`** dosyasını herhangi bir modern tarayıcıda açarak internet bağlantısı olmadan da kullanabilirsin.
 
 ---
 
-## 🌍 English Summary — *Stop Copy-Pasting Builds. Start Reading the Game.*
+## English Summary — *Stop Copy-Pasting Builds. Start Reading the Game.*
 
 **LOL ITEMS** is an interactive, offline-capable tactical itemization simulator designed to break League of Legends players out of the "autopilot build guide" mindset. Instead of memorizing static item lists, players are placed into realistic, procedurally generated match states where they must inspect the live **TAB Scoreboard**, analyze enemy item spikes, check their own **Rune & Tenacity gaps**, and manage their unspent gold to lock in the mathematically optimal counter-item.
 
@@ -76,6 +76,6 @@ Repoyu indirdikten sonra klasör içindeki **`Baslat_Offline_Uygulama.bat`** dos
 <div align="center">
 
 **Ezberi boz. TAB tablosunu oku. Vadinin kontrolünü eline al.**  
-*GLHF!* ⚔️🛡️
+*GLHF!* ⚔️
 
 </div>
