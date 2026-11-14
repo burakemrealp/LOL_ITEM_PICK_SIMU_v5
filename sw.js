@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lol-items-pwa-v20';
+const CACHE_NAME = 'lol-items-pwa-v21';
 const CORE_ASSETS = [
     './',
     './index.html',

@@ -5632,76 +5632,131 @@
         applyAnswerFeedback(selectedNameEn);
     }
 
-    /* MADDE 4: ŞIK BAZLI KIYASLAMALI KOÇLUK RAPORU VE SEÇİLEN ŞIK TEŞHİS MOTORU */
-    function explainWhyDistractorSuboptimal(distractorNameEn, m) {
+    /* MADDE 4: PARAMETRİK NEDEN-SONUÇ SENTEZLEYİCİ VE ŞIK BAZLI DERİN KOÇLUK MOTORU */
+    function buildParametricCollisionReason(dItem, cItem, m, isTr) {
+        const dName = dItem ? dItem.name : "";
+        const cName = cItem ? cItem.name : m.correct;
+        const dDisp = dItem ? getItemDisplayName(dItem) : dName;
+        const cDisp = cItem ? getItemDisplayName(cItem) : cName;
+        const dTags = (dItem && dItem.statTags) ? dItem.statTags : [];
+        const cTags = (cItem && cItem.statTags) ? cItem.statTags : [];
+
+        const pThreat = m.primaryThreat || m.enemyTeam[0];
+        const sThreat = (m.fedThreats && m.fedThreats.length > 1) ? m.fedThreats[1] : null;
+        const pInfo = getEnemyTacticalInfo(pThreat);
+        const pKit = isTr ? pInfo.kit_tr : pInfo.kit_en;
+        const pThreatItems = (pThreat.equippedItems || pThreat.coreItems || []).slice(0, 4).map(n => ITEM_BY_NAME[n] ? getItemDisplayName(ITEM_BY_NAME[n]) : n).join(' + ');
+        const threatHeader = sThreat
+            ? `${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists} – ${pThreatItems}) & ${sThreat.champ} (${sThreat.kills}/${sThreat.deaths}/${sThreat.assists})`
+            : `${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists} – ${pThreatItems})`;
+
+        const reqTag = (m.template && m.template.requiredTag) ? m.template.requiredTag : "";
+        const pc = m.playerContext || {};
+
+        // 1. QSS / Sindirme (Suppression) ve Nokta Atışı CC Kilidi (Cıva Yatağan / Cıva Kuşağı / Mikael)
+        if (cName === "Mercurial Scimitar" || cName === "Quicksilver Sash" || cName === "Mikael's Blessing" || reqTag === "suppression") {
+            const hasNoMr = !dTags.includes("mr");
+            return isTr
+                ? `Bu eşya saf saldırı/stat odaklıdır ve <strong>Kitle Kontrol Kaldırma (Cıva Aktifi)${hasNoMr ? ' ile Büyü Direnci' : ''}</strong> içermez. Karşıdaki <strong>${threatHeader}</strong> yetenek kiti (<em>${pKit}</em>) nedeniyle seni nokta atışı kilitlemektedir. Sen kilitlendiğin 2.5+ saniye boyunca düz vuruş yapamayacağın veya yetenek kullanamayacağın için <strong>${dDisp}</strong> eşyasının verdiği saldırı hızı, hasar veya can çalma <strong>%0 verimle</strong> çalışır ve ulti süresi bitmeden erirsin.`
+                : `This item focuses on raw stats and lacks the <strong>Quicksilver Cleanse Active${hasNoMr ? ' and Magic Resist' : ''}</strong>. Against <strong>${threatHeader}</strong> (<em>${pKit}</em>), you get locked down for 2.5+ seconds. While suppressed or stunned, you cannot basic attack or cast spells, reducing <strong>${dDisp}</strong>'s DPS and Life Steal value to <strong>0%</strong>.`;
+        }
+
+        // 2. Yüzdelik Büyü Nüfuzu (% Magic Pen: Hiçlik Değneği / Mahzençiceği) vs. Düz Büyü Nüfuzu / Saf AP
+        if (cName === "Void Staff" || cName === "Cryptbloom" || reqTag === "mr_stack") {
+            return isTr
+                ? `<strong>${dDisp}</strong> yüzdelik Büyü Nüfuzu (% MagicPen) sağlamaz; düz büyü nüfuzu veya saf AP yalnızca düşük dirençli hedeflere işler. Karşıdaki <strong>${threatHeader}</strong> çantasında ağır Büyü Direnci (MR) yığdığı için (${pKit}) büyü hasarını %60'ın üzerinde sönümler; bu direnci delmek için <strong>${cDisp}</strong> eşyasının yüzdelik büyü nüfuzu şarttır.`
+                : `<strong>${dDisp}</strong> lacks percentage Magic Penetration; flat pen or raw AP only works against low-MR targets. Because <strong>${threatHeader}</strong> stacked heavy Magic Resist (${pKit}), your spell damage is mitigated by over 60% without <strong>${cDisp}</strong>.`;
+        }
+
+        // 3. Yüzdelik Zırh Delme (% Armor Pen: Dominik / Fani Hatıratı / Kara Balta / Serylda / Terminus) vs. Düz Zırh Deşme / Saf Kritik / Saldırı Hızı
+        if (cName === "Lord Dominik's Regards" || cName === "Mortal Reminder" || cName === "Black Cleaver" || cName === "Serylda's Grudge" || cName === "Terminus" || reqTag === "armor_stack") {
+            if (dName === "Blade of The Ruined King" && CASTER_BRUISERS.has(m.playerChamp.name)) {
+                return isTr
+                    ? `<strong>${dDisp}</strong> düz vuruş (On-Hit) eşyasıdır ve %Zırh Delme içermez. Senin şampiyonun (<strong>${m.playerChamp.name}</strong>) hasarını düz vuruş hızıyla değil yetenek kombosuyla (AD Caster) çıkarır ve karşıdaki <strong>${threatHeader}</strong> yüksek Zırh yığdığı için Mahvolmuş Kralın Kılıcı'nın fiziksel vuruşları zırhtan sekerek erir.`
+                    : `<strong>${dDisp}</strong> is an On-Hit auto-attack item with zero % Armor Penetration. <strong>${m.playerChamp.name}</strong> is an AD Caster bruiser, and <strong>${threatHeader}</strong>'s stacked Armor mitigates BotRK's physical on-hit damage.`;
+            }
+            return isTr
+                ? `<strong>${dDisp}</strong> yüzdelik Zırh Delme (% ArmorPen) barındırmaz. Karşıdaki <strong>${threatHeader}</strong> yüksek Zırh eşyaları tamamladığı için (${pKit}), zırh delme olmadan çıkacağın düz Saldırı Gücü, Zırh Deşme (Lethality) veya Saldırı Hızı vuruşların rakibin zırh duvarından sekerek etkisiz kalır.`
+                : `<strong>${dDisp}</strong> provides zero % Armor Penetration. Because <strong>${threatHeader}</strong> stacked heavy Armor (${pKit}), flat Lethality, raw AD, or Attack Speed bounces off their frontline without <strong>${cDisp}</strong>.`;
+        }
+
+        // 4. Ağır Yara (%40 İyileştirme Azaltma: Morello / Zaun İşi Testerekılıç / Çivili Zırh / Fani Hatıratı / Celladın Çağrısı / Bilinmezlik Küresi / Dikenli Yelek)
+        if (cTags.includes("gw") || reqTag === "heavy_heal") {
+            return isTr
+                ? `<strong>${dDisp}</strong> pasifinde <strong>%40 Ağır Yara (İyileştirme Azaltma)</strong> etkisi barındırmaz. Karşıdaki <strong>${threatHeader}</strong> yetenek kiti ve eşyalarıyla (<em>${pKit}</em>) savaş ortasında sürekli yüksek miktarda can yenilediği için, iyileştirmesini kesmeden sadece saf hasar kasmak rakibin verdiği hasardan daha fazlasını geri doldurmasına yol açar.`
+                : `<strong>${dDisp}</strong> lacks <strong>40% Grievous Wounds (Anti-Heal)</strong>. Because <strong>${threatHeader}</strong> heals massively during combat (<em>${pKit}</em>), building raw stats without cutting their regeneration allows them to out-heal your damage.`;
+        }
+
+        // 5. Azami Can (%HP) Hasarı (Liandry / Mahvolmuş Kralın Kılıcı / Kraken) vs. Düz Patlama Eşyaları
+        if (cName === "Liandry's Torment" || cName === "Blade of The Ruined King" || reqTag === "hp_stack") {
+            return isTr
+                ? `<strong>${dDisp}</strong> hedefin Azami Canına oranla (%HP) vuran bir pasife sahip değildir. Karşıdaki <strong>${threatHeader}</strong> Çelikyürek/Warmog gibi eşyalarla devasa bir Can havuzuna ulaştığı için (${pKit}), yüzdelik can eritme olmadan düz hasarla bu ön safı eritmen çok uzun sürer.`
+                : `<strong>${dDisp}</strong> lacks percentage Health (%HP) damage. Against <strong>${threatHeader}</strong>'s massive HP pool (${pKit}), flat burst damage cannot shred their frontline fast enough.`;
+        }
+
+        // 6. Kalkan Kırma (Yılan Dişi - Serpent's Fang)
+        if (cName === "Serpent's Fang" || reqTag === "shield_comp") {
+            return isTr
+                ? `<strong>${dDisp}</strong> rakibin kalkanlarını azaltma mekaniğine sahip değildir. Karşıdaki <strong>${threatHeader}</strong> sürekli üst üste binen devasa kalkanlar açtığı için (${pKit}), kalkanları %50 kıran <strong>${cDisp}</strong> olmadan vurduğun hasarın büyük kısmı gerçek can barına ulaşmadan kalkanlarda erir.`
+                : `<strong>${dDisp}</strong> has no Shield Reaver effect. Because <strong>${threatHeader}</strong> generates massive overlapping shields (${pKit}), your raw damage is absorbed by shields without <strong>${cDisp}</strong>'s 50% shield cut.`;
+        }
+
+        // 7. Zhonya / Koruyucu Melek / Ölümün Dansı (Anti-AD Suikastçı & Ani Fiziksel Patlama)
+        if (cName === "Zhonya's Hourglass" || cName === "Guardian Angel" || cName === "Death's Dance" || cName === "Seeker's Armguard" || reqTag === "ad_assassin") {
+            const hasNoArmor = !dTags.includes("armor");
+            return isTr
+                ? `<strong>${dDisp}</strong> sana <strong>${hasNoArmor ? 'Zırh (Armor) ve ' : ''}hedef alınamazlık / anlık hasar sönümleme pasifi</strong> vermez. Karşıdaki kasmış <strong>${threatHeader}</strong> yetenek kitiyle (<em>${pKit}</em>) arka saflara atılıp 1 saniye içinde ölümcül fiziksel patlama (Burst) çıkardığı için, hayatta kalma mekaniği olmayan <strong>${dDisp}</strong> seçimiyle hasar vuramadan tek komboya düşersin.`
+                : `<strong>${dDisp}</strong> provides no <strong>${hasNoArmor ? 'Armor and ' : ''}Stasis / burst-mitigation passive</strong>. Because <strong>${threatHeader}</strong> dives backlines for lethal physical burst (<em>${pKit}</em>), building <strong>${dDisp}</strong> leaves you vulnerable to being one-shot before dealing damage.`;
+        }
+
+        // 8. Anti-AP Patlama & Büyü Kalkanı (Banshee / Malmortius / Kaenic Rookern / Doğanın Kudreti / Aklın Sonu / Yeşim Bariyer / Sihiriçen)
+        if (cName === "Banshee's Veil" || cName === "Maw of Malmortius" || cName === "Kaenic Rookern" || cName === "Force of Nature" || cName === "Wit's End" || cName === "Verdant Barrier" || cName === "Hexdrinker" || reqTag === "ap_burst" || reqTag === "ap_dps") {
+            const givesArmorOnly = dTags.includes("armor") && !dTags.includes("mr");
+            return isTr
+                ? `<strong>${dDisp}</strong> ${givesArmorOnly ? 'Zırh (Armor) verir ancak <strong>0 Büyü Direnci (MR)</strong> içerir' : 'yeterli Büyü Direnci (MR) veya Büyü Kalkanı sağlamaz'}. Tablodaki ana tehdit <strong>${threatHeader}</strong> ağır Büyü Hasarı ve yetenek kombosu vurduğu için (${pKit}), büyü savunması olmayan bu tercihle rakibin ilk rotasyonunda erirsin.`
+                : `<strong>${dDisp}</strong> ${givesArmorOnly ? 'grants Armor with <strong>0 Magic Resist</strong>' : 'lacks Magic Resist or a Spell Shield'}. Since <strong>${threatHeader}</strong> deals lethal Magic Damage (${pKit}), this choice leaves you defenseless against their spell rotation.`;
+        }
+
+        // 9. Anti-Kritik ve Anti-Saldırı Hızı Tank Eşyaları (Randuin / Donmuş Yürek / Çelik Kaplamalı Çizme)
+        if (cName === "Randuin's Omen" || cName === "Frozen Heart" || cName === "Plated Steelcaps" || reqTag === "crit_carry" || reqTag === "attack_speed") {
+            const givesMrOnly = dTags.includes("mr") && !dTags.includes("armor");
+            return isTr
+                ? `<strong>${dDisp}</strong> ${givesMrOnly ? 'Büyü Direnci verir ancak <strong>0 Zırh</strong> içerir' : 'kritik vuruş hasarını (%30 azaltma) veya rakibin saldırı hızını (%20 kırma) düşüren özel pasife sahip değildir'}. Karşıdaki kasmış <strong>${threatHeader}</strong> saniyede çok sayıda düz vuruş ve Kritik hasar çıkardığı için (${pKit}), <strong>${cDisp}</strong> pasifi olmadan ön safta erirsin.`
+                : `<strong>${dDisp}</strong> ${givesMrOnly ? 'grants Magic Resist with <strong>0 Armor</strong>' : 'lacks the Crit-damage reduction (-30%) or Attack Speed cripple (-20%) passive'}. Against <strong>${threatHeader}</strong>'s high-AS/Crit DPS (${pKit}), your frontline melts without <strong>${cDisp}</strong>.`;
+        }
+
+        // 10. Sıvışma (Tenacity) ve Kitle Kontrol Direnci (Merkür'ün Adımları / Sterak / Aklın Sonu)
+        if (cName === "Mercury's Treads" || cName === "Sterak's Gage" || reqTag === "cc") {
+            return isTr
+                ? `<strong>${dDisp}</strong> sana <strong>Sıvışma (%Tenacity)</strong> veya kitle kontrol direnci kazandırmaz (Mevcut Sıvışman: <strong>%${pc.totalTenacity || 0}</strong>). Karşıdaki <strong>${threatHeader}</strong> üst üste sersemletme ve sabitleme zinciri kurduğu için (${pKit}), Sıvışma olmadan ilk yakalandığında hareket edemeden katledilirsin.`
+                : `<strong>${dDisp}</strong> grants <strong>0% Tenacity</strong> (Your current Tenacity: <strong>${pc.totalTenacity || 0}%</strong>). Because <strong>${threatHeader}</strong> chains heavy crowd control (${pKit}), lacking Tenacity means getting locked down and killed on the first catch.`;
+        }
+
+        // 11. Diğer tüm özel durumlar için Eşya Statı + Rakip Kit + Çanta Parametrik Sentezi
+        return isTr
+            ? `<strong>${dDisp}</strong> yalnızca kendi statlarına odaklanır; ancak karşıdaki <strong>${threatHeader}</strong> şampiyonunun yetenek kiti (<em>${pKit}</em>) ve çantasındaki <em>${pThreatItems}</em> dizilimi, <strong>${cDisp}</strong> eşyasının özel karşı-mekaniğini (<em>${getItemPassive(cItem)}</em>) zorunlu kılmaktadır.`
+            : `<strong>${dDisp}</strong> only provides raw stats, whereas <strong>${threatHeader}</strong>'s kit (<em>${pKit}</em>) and <em>${pThreatItems}</em> build specifically require <strong>${cDisp}</strong>'s counter-mechanic (<em>${getItemPassive(cItem)}</em>).`;
+    }
+
+    function explainWhyDistractorSuboptimal(distractorNameEn, m, isDetailedSelectedCard = false) {
         const isTr = currentLang === 'tr';
         const dItem = ITEM_BY_NAME[distractorNameEn];
-        const dDisp = dItem ? getItemDisplayName(dItem) : distractorNameEn;
         const cItem = ITEM_BY_NAME[m.correct];
-        const cDisp = cItem ? getItemDisplayName(cItem) : m.correct;
-        const td = m.threatData || computeMatchThreatVector(m.playerChamp, m.playerContext, m.enemyTeam);
-        const pc = m.playerContext || {};
-        const pThreat = m.primaryThreat || m.enemyTeam[0];
-        const pThreatItems = (pThreat.equippedItems || pThreat.coreItems || []).slice(0, 4).map(n => ITEM_BY_NAME[n] ? getItemDisplayName(ITEM_BY_NAME[n]) : n).join(', ');
+        const dDisp = dItem ? getItemDisplayName(dItem) : distractorNameEn;
+        const dStats = dItem ? getItemStats(dItem) : "";
+        const dPassive = dItem ? getItemPassive(dItem) : "";
 
-        // 1. Flat Pen vs. Heavy Stacking Resistance Trap (Shadowflame, Stormsurge, Collector, Youmuu, Opportunity)
-        if ((distractorNameEn === "Shadowflame" || distractorNameEn === "Stormsurge" || distractorNameEn === "Luden's Companion" || distractorNameEn === "Lich Bane") && (m.correct === "Void Staff" || m.correct === "Cryptbloom")) {
+        const collisionReason = buildParametricCollisionReason(dItem, cItem, m, isTr);
+
+        if (isDetailedSelectedCard) {
             return isTr
-                ? `<strong>${dDisp}:</strong> Düz büyü nüfuzu / anlık patlama sadece düşük büyü dirençli hedeflere karşı etkilidir. Karşıda <strong>${pThreat.champ} (${pThreatItems})</strong> ağır Büyü Direnci (MR) yığdığı için düz nüfuz hasarını %60'tan fazla düşürür; yüzdelik delme veren <strong>${cDisp}</strong> şarttır.`
-                : `<strong>${dDisp}:</strong> Flat magic pen / burst only works against low-MR targets. Because <strong>${pThreat.champ} (${pThreatItems})</strong> stacked heavy MR, flat pen loses over 60% efficiency compared to <strong>${cDisp}</strong>.`;
-        }
-        if ((distractorNameEn === "The Collector" || distractorNameEn === "Youmuu's Ghostblade" || distractorNameEn === "Opportunity" || distractorNameEn === "Phantom Dancer" || distractorNameEn === "Infinity Edge") && (m.correct === "Lord Dominik's Regards" || m.correct === "Mortal Reminder" || m.correct === "Black Cleaver" || m.correct === "Serylda's Grudge" || m.correct === "Terminus")) {
-            return isTr
-                ? `<strong>${dDisp}:</strong> Zırh delme (% Armor Pen) içermediği veya sadece düz Zırh Deşme (Lethality) verdiği için <strong>${pThreat.champ} (${pThreatItems})</strong> gibi yüksek Zırh yığan ön saflara karşı hasarın sekerek sıfırlanır.`
-                : `<strong>${dDisp}:</strong> Lacks % Armor Penetration; flat Lethality or raw Crit/AS bounces off armor-stacking frontliners like <strong>${pThreat.champ} (${pThreatItems})</strong>.`;
+                ? `<div style="margin-bottom:5px;">• <strong>Seçtiğin Eşyanın Özellikleri (${dDisp}):</strong> <span style="color:var(--cyan);">${dStats}</span> — <em>${dPassive}</em></div>` +
+                  `<div>• <strong>Rakip Şampiyon & Eşya Çarpışması:</strong> ${collisionReason}</div>`
+                : `<div style="margin-bottom:5px;">• <strong>Your Chosen Item's Profile (${dDisp}):</strong> <span style="color:var(--cyan);">${dStats}</span> — <em>${dPassive}</em></div>` +
+                  `<div>• <strong>Enemy Kit & Item Collision:</strong> ${collisionReason}</div>`;
         }
 
-        // 2. Caster vs On-Hit Identity Trap (BotRK on Aatrox/Riven/Darius/Illaoi)
-        if (distractorNameEn === "Blade of The Ruined King" && CASTER_BRUISERS.has(m.playerChamp.name)) {
-            return isTr
-                ? `<strong>${dDisp}:</strong> Düz vuruş (On-Hit) eşyasıdır; ancak <strong>${m.playerChamp.name}</strong> hasarını düz vuruş hızıyla değil yetenek kombosuyla (Caster) çıkarır. Bu yüzden <strong>${cDisp}</strong> çok daha yüksek kombo verimi sağlar.`
-                : `<strong>${dDisp}:</strong> An On-Hit auto-attack item, whereas <strong>${m.playerChamp.name}</strong> is an ability-caster bruiser who gets far higher value from <strong>${cDisp}</strong>.`;
-        }
-
-        // 3. Anti-Heal Missing Trap vs Heavy Sustain
-        if (m.template && m.template.requiredTag === "heavy_heal" && (!dItem || !dItem.statTags || !dItem.statTags.includes("gw"))) {
-            return isTr
-                ? `<strong>${dDisp}:</strong> %40 Ağır Yara (İyileştirme Azaltma) sağlamaz. Karşıdaki <strong>${pThreat.champ}</strong> çatışma içinde sürekli can yenilediği için iyileştirmesini kesmeden saf hasarla onu eritemezsin.`
-                : `<strong>${dDisp}:</strong> Provides zero Grievous Wounds. Without 40% anti-heal, <strong>${pThreat.champ}</strong> will out-heal your raw damage in extended fights.`;
-        }
-
-        // 4. Suppression (Malzahar / Skarner / Warwick / Mordekaiser) vs Non-QSS
-        if (m.template && m.template.requiredTag === "suppression" && distractorNameEn !== "Mercurial Scimitar" && distractorNameEn !== "Quicksilver Sash") {
-            return isTr
-                ? `<strong>${dDisp}:</strong> <strong>${pThreat.champ}</strong> ultisinin Sindirme (Suppression) etkisini Sıvışma (Tenacity) veya kalkanlarla bozamazsın; sadece Cıva (Quicksilver) aktifi bu kilidi anında kırar.`
-                : `<strong>${dDisp}:</strong> Cannot break <strong>${pThreat.champ}</strong>'s Suppression ultimate; Tenacity and shields do not remove Suppression—only Quicksilver active does.`;
-        }
-
-        // 5. Shield Reaver Missing vs Heavy Shield Comp
-        if (m.correct === "Serpent's Fang") {
-            return isTr
-                ? `<strong>${dDisp}:</strong> Rakip takımdaki çoklu kalkan sinerjisini (<strong>${pThreat.champ}</strong>) kıramaz; kalkanları %50 azaltan Yılan Dişi olmadan verdiğin hasar kalkan barında erir.`
-                : `<strong>${dDisp}:</strong> Does not cut enemy shields; against <strong>${pThreat.champ}</strong>'s shield stacking, Serpent's Fang's 50% shield reduction deals far more effective damage.`;
-        }
-
-        // 6. Wrong Resistance Type (Armor vs AP threat or MR vs AD threat)
-        if (dItem && dItem.statTags) {
-            if (dItem.statTags.includes("armor") && !dItem.statTags.includes("mr") && (m.template.requiredTag === "ap_burst" || m.template.requiredTag === "ap_dps")) {
-                return isTr
-                    ? `<strong>${dDisp}:</strong> Zırh sağlar ancak tablodaki ana tehdit <strong>${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists})</strong> ağır Büyü Hasarı vuruyor; yanlış savunma statına yatırım yapmış olursun.`
-                    : `<strong>${dDisp}:</strong> Grants Armor, but the primary fed threat <strong>${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists})</strong> deals heavy Magic Damage.`;
-            }
-            if (dItem.statTags.includes("mr") && !dItem.statTags.includes("armor") && (m.template.requiredTag === "ad_assassin" || m.template.requiredTag === "crit_carry" || m.template.requiredTag === "attack_speed")) {
-                return isTr
-                    ? `<strong>${dDisp}:</strong> Büyü Direnci verir fakat karşıdaki kasmış <strong>${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists})</strong> saf Fiziksel Hasar / Kritik tehdididir.`
-                    : `<strong>${dDisp}:</strong> Grants Magic Resist, whereas the fed threat <strong>${pThreat.champ} (${pThreat.kills}/${pThreat.deaths}/${pThreat.assists})</strong> deals lethal Physical/Crit damage.`;
-            }
-        }
-
-        // 7. Generic high-level tactical comparison
-        return isTr
-            ? `<strong>${dDisp}:</strong> Standart dizilimde güçlü bir eşya olsa da, <strong>${pThreat.champ} (${pThreatItems})</strong> tehdidine ve mevcut çanta/rün durumuna karşı <strong>${cDisp}</strong> kadar yüksek karşı-etki (counter-utility) üretmez.`
-            : `<strong>${dDisp}:</strong> While viable in standard builds, it provides significantly lower counter-utility against <strong>${pThreat.champ} (${pThreatItems})</strong> than <strong>${cDisp}</strong> in this specific match state.`;
+        return `<strong>${dDisp} (<span style="color:var(--cyan);">${dStats}</span>):</strong> ${collisionReason}`;
     }
 
     function applyAnswerFeedback(selectedNameEn) {
@@ -5743,6 +5798,10 @@
         fbTitle.style.color = isCorrect ? 'var(--green)' : 'var(--red)';
 
         const baseExp = isTr ? m.template.exp_tr : m.template.exp_en;
+        const pThreat = m.primaryThreat || m.enemyTeam[0];
+        const pInfo = getEnemyTacticalInfo(pThreat);
+        const pKit = isTr ? pInfo.kit_tr : pInfo.kit_en;
+
         const fedSummary = (m.fedThreats || [m.primaryThreat]).map(th => {
             const eqNames = (th.equippedItems || th.coreItems.slice(0, 3)).slice(0, 4).map(inm => {
                 const io = ITEM_BY_NAME[inm];
@@ -5755,58 +5814,72 @@
         const invNames = (pc.inventory || []).map(inm => {
             const io = ITEM_BY_NAME[inm];
             return io ? getItemDisplayName(io) : inm;
-        }).join(' + ');
+        }).join(' + ') || (isTr ? 'Başlangıç aşaması' : 'Starter phase');
         const runeName = pc.rune ? (isTr ? pc.rune.name_tr : pc.rune.name_en) : '';
         const comp = m.threatData ? m.threatData.comp : analyzeEnemyTeamComp(m.enemyTeam);
 
         const correctScore = (m.utilityScores && m.utilityScores[m.correct]) ? m.utilityScores[m.correct] : 95.0;
         const selectedScore = (m.utilityScores && m.utilityScores[selectedNameEn]) ? m.utilityScores[selectedNameEn] : 54.0;
 
+        const cStats = correctItem ? getItemStats(correctItem) : '';
+        const cPassive = correctItem ? getItemPassive(correctItem) : '';
+
         let htmlReport = '';
 
-        // 1. If player clicked a wrong option, show specific diagnosis of why their clicked option failed
+        // 1. If player clicked a wrong option, show specific parametric diagnosis of why their clicked option failed
         if (!isCorrect) {
-            const wrongReason = explainWhyDistractorSuboptimal(selectedNameEn, m);
+            const wrongReasonHtml = explainWhyDistractorSuboptimal(selectedNameEn, m, true);
             htmlReport += `
                 <div class="coach-section coach-sec-wrong">
                     <div class="coach-sec-head" style="color: #ff7675;">
                         <span>${isTr ? `❌ NEDEN SEÇTİĞİN ŞIK (${selectedDisplayName}) BU MAÇTA HATALI?` : `❌ WHY YOUR CHOICE (${selectedDisplayName}) IS SUBOPTIMAL HERE:`}</span>
                         <span class="coach-util-pill">${isTr ? `Fayda Skoru: ${selectedScore}` : `Utility Score: ${selectedScore}`}</span>
                     </div>
-                    <div>${wrongReason}</div>
+                    <div>${wrongReasonHtml}</div>
                 </div>
             `;
         }
 
-        // 2. Why the Optimal Counter Item wins mathematically
+        // 2. Why the Optimal Counter Item wins mathematically & mechanically
         htmlReport += `
             <div class="coach-section coach-sec-correct">
                 <div class="coach-sec-head" style="color: var(--green);">
                     <span>${isTr ? `✅ NEDEN ${correctDisplayName} EN YÜKSEK KAZANMA ORANINI SAĞLAR?` : `✅ WHY ${correctDisplayName} MAXIMIZES WIN PROBABILITY:`}</span>
                     <span class="coach-util-pill" style="border-color: var(--green); color: #2ecc71;">${isTr ? `Optimum Fayda: ${correctScore}` : `Optimal Utility: ${correctScore}`}</span>
                 </div>
-                <div><strong>${isTr ? 'Canlı TAB Tehdit Analizi' : 'Live TAB Threat Analysis'} [${fedSummary}]:</strong> ${baseExp}</div>
+                <div style="margin-bottom: 4px;">
+                    • <strong>${isTr ? `Eşya Özelliği (${correctDisplayName})` : `Item Profile (${correctDisplayName})`}:</strong> <span style="color: var(--cyan);">${cStats}</span> — <em>${cPassive}</em>
+                </div>
+                <div style="margin-bottom: 4px;">
+                    • <strong>${isTr ? `Rakip Tehdit Kiti [${pThreat.champ}]` : `Enemy Threat Kit [${pThreat.champ}]`}:</strong> ${pKit}
+                </div>
+                <div>
+                    • <strong>${isTr ? 'Canlı TAB Çözümü' : 'Live TAB Solution'} [${fedSummary}]:</strong> ${baseExp}
+                </div>
             </div>
         `;
 
-        // 3. Player Inventory + Rune + Team Composition Synergy Summary
+        // 3. Player Inventory + Rune + Team Composition Synergy + Other Distractors Breakdown
         const tenacityNote = isTr
             ? (pc.totalTenacity === 0 ? `Rün ve çizmenden %0 Sıvışma (Tenacity) geliyor` : `Rün/Çizmeden %${pc.totalTenacity} Sıvışma mevcut`)
             : (pc.totalTenacity === 0 ? `0% Tenacity from runes/boots` : `${pc.totalTenacity}% Tenacity active from runes/boots`);
 
         const otherDistractors = (m.options || []).filter(o => o !== m.correct && o !== selectedNameEn);
-        const otherNotes = otherDistractors.map(dName => `• ` + explainWhyDistractorSuboptimal(dName, m)).join('<br>');
+        const otherNotes = otherDistractors.map(dName => `• ` + explainWhyDistractorSuboptimal(dName, m, false)).join('<br>');
 
         htmlReport += `
             <div class="coach-section coach-sec-synergy">
                 <div class="coach-sec-head" style="color: var(--cyan);">
-                    <span>${isTr ? `🧩 ÇANTA, RÜN VE KOMPOZİSYON SİNERJİSİ & DİĞER ŞIKLARIN ANALİZİ` : `🧩 INVENTORY, RUNE & COMP SYNERGY + OTHER OPTIONS`}</span>
+                    <span>${isTr ? `🧩 ÇANTA, RÜN VE DİĞER ŞIKLARIN PARAMETRİK ANALİZİ` : `🧩 INVENTORY, RUNE & OTHER OPTIONS PARAMETRIC ANALYSIS`}</span>
                 </div>
-                <div style="margin-bottom: 5px;">
+                <div style="margin-bottom: 6px;">
                     ${isTr
-                        ? `<strong>Senin Dizilimin:</strong> Çantandaki <em>${invNames}</em> ve <em>${runeName}</em> (${tenacityNote}) üzerine <strong>${correctDisplayName}</strong> eklendiğinde, rakip kompozisyona (${comp.counts.AD} AD / ${comp.counts.AP} AP / ${comp.counts.OFF_TANK} Off-Tank / ${comp.counts.TANK} Tank — %${comp.physPct} Fiziksel / %${comp.magPct} Büyü) karşı eksik çarpanın eksiksiz tamamlanır.`
-                        : `<strong>Your Setup:</strong> Combining <strong>${correctDisplayName}</strong> with your current inventory (<em>${invNames}</em>) and <em>${runeName}</em> (${tenacityNote}) completes your optimal multiplier against the enemy comp (${comp.counts.AD} AD / ${comp.counts.AP} AP / ${comp.counts.OFF_TANK} Off-Tank / ${comp.counts.TANK} Tank).`
+                        ? `• <strong>Senin Dizilim Sinerjin:</strong> Çantandaki <em>${invNames}</em> ve <em>${runeName}</em> (${tenacityNote}) üzerine <strong>${correctDisplayName}</strong> eklendiğinde, rakip kompozisyona (${comp.counts.AD} AD / ${comp.counts.AP} AP / ${comp.counts.OFF_TANK} Off-Tank / ${comp.counts.TANK} Tank — %${comp.physPct} Fiziksel / %${comp.magPct} Büyü) karşı eksik çarpanın eksiksiz tamamlanır.`
+                        : `• <strong>Your Setup Synergy:</strong> Combining <strong>${correctDisplayName}</strong> with your current inventory (<em>${invNames}</em>) and <em>${runeName}</em> (${tenacityNote}) completes your optimal multiplier against the enemy comp (${comp.counts.AD} AD / ${comp.counts.AP} AP / ${comp.counts.OFF_TANK} Off-Tank / ${comp.counts.TANK} Tank).`
                     }
+                </div>
+                <div style="font-weight: 800; color: var(--gold-bright); font-size: 11px; margin-bottom: 2px;">
+                    ${isTr ? '🔍 Diğer Şıklar Neden Elendi?' : '🔍 Why Were the Other Options Eliminated?'}
                 </div>
                 <div class="coach-distractor-list">${otherNotes}</div>
             </div>
